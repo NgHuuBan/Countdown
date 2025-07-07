@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8" />
+  <title>Đồng hồ đếm ngược</title>
+  <style>
+    body {
+      background-color: #000;
+      color: #0f0;
+      font-family: monospace;
+      text-align: center;
+      font-size: 48px;
+      margin-top: 20%;
+    }
+    .expired { color: red; }
+  </style>
+</head>
+<body>
+  <div id="countdown">Đang đợi thời gian bắt đầu...</div>
+  <script>
+    const params = new URLSearchParams(window.location.search);
+    const start = parseInt(params.get("start"));
+    const duration = 3 * 3600 + 45 * 60;
+    if (isNaN(start)) {
+      document.getElementById("countdown").textContent = "Không có thời gian bắt đầu.";
+    } else {
+      const end = start + duration;
+      function updateCountdown() {
+        const now = Math.floor(Date.now() / 1000);
+        const remaining = end - now;
+        const d = document.getElementById("countdown");
+        if (remaining <= 0) {
+          d.textContent = "Đã đến giờ dừng server.";
+          d.classList.add("expired");
+          return;
+        }
+        const h = String(Math.floor(remaining / 3600)).padStart(2, '0');
+        const m = String(Math.floor((remaining % 3600) / 60)).padStart(2, '0');
+        d.textContent = `Còn lại: ${h}:${m}`;
+        setTimeout(updateCountdown, 1000);
+      }
+      updateCountdown();
+    }
+  </script>
+</body>
+</html>
