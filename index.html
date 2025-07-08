@@ -2,62 +2,86 @@
 <html lang="vi">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Countdown Minecraft Server</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Countdown Server Minecraft</title>
   <style>
     body {
-      font-family: sans-serif;
+      font-family: monospace;
       background: #111;
       color: #0f0;
       display: flex;
+      flex-direction: column;
       align-items: center;
       justify-content: center;
       height: 100vh;
       margin: 0;
-      flex-direction: column;
     }
     h1 {
       font-size: 3rem;
+      margin-bottom: 1rem;
+    }
+    p {
+      font-size: 1.2rem;
+      color: #ccc;
     }
   </style>
 </head>
 <body>
-  <h1 id="countdown">Đang tải...</h1>
+  <h1 id="countdown">⏳ Đang tải...</h1>
+  <p id="status"></p>
 
   <script>
+    const TIMEOUT = 13500; // 3h45p = 13500 giây
+    const startUrl = "https://raw.githubusercontent.com/NgHuuBan/Countdown/main/start.json";
+    const stopUrl = "https://raw.githubusercontent.com/NgHuuBan/Countdown/main/stop.json";
+
+    async function fetchJson(url) {
+      const res = await fetch(url);
+      if (!res.ok) throw new Error("Không tìm thấy " + url);
+      return res.json();
+    }
+
     async function loadCountdown() {
-      const url = "https://raw.githubusercontent.com/NgHuuBan/Countdown/main/start.json";
-      const TIMEOUT = 13500; // 3h45p = 13500 giây
+      try {
+        const stopData = await fetchJson(stopUrl);
+        if (stopData && stopData.stop) {
+          document.getElementById("countdown").textContent = "🛑 Server đã dừng.";
+          const d = new Date(stopData.stop * 1000);
+          document.getElementById("status").textContent = "Thời gian dừng: " + d.toLocaleString();
+          return;
+        }
+      } catch (err) {
+        // Không có stop.json → tiếp tục
+      }
 
       try {
-        const response = await fetch(url);
-        const data = await response.json();
-        const start = data.start;
+        const startData = await fetchJson(startUrl);
+        const start = startData.start;
         const endTime = start + TIMEOUT;
 
-        function updateCountdown() {
+        function updateClock() {
           const now = Math.floor(Date.now() / 1000);
-          let remaining = endTime - now;
+          const remaining = endTime - now;
 
           if (remaining <= 0) {
             document.getElementById("countdown").textContent = "⏰ Đã hết giờ!";
+            document.getElementById("status").textContent = "";
             return;
           }
 
-          const hours = Math.floor(remaining / 3600);
-          const minutes = Math.floor((remaining % 3600) / 60);
-          const seconds = remaining % 60;
+          const h = Math.floor(remaining / 3600);
+          const m = Math.floor((remaining % 3600) / 60);
+          const s = remaining % 60;
 
           document.getElementById("countdown").textContent =
-            `⏳ Còn lại: ${hours.toString().padStart(2, "0")}:${minutes
-              .toString()
-              .padStart(2, "0")}:${seconds.toString().padStart(2, "0")}`;
+            `⏳ Còn lại: ${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`;
         }
 
-        updateCountdown();
-        setInterval(updateCountdown, 1000);
-      } catch (e) {
-        document.getElementById("countdown").textContent = "⚠ Không lấy được thời gian.";
+        updateClock();
+        setInterval(updateClock, 1000);
+        document.getElementById("status").textContent = "Server đang chạy...";
+      } catch (err) {
+        document.getElementById("countdown").textContent = "⚠ Không thể tải dữ liệu.";
       }
     }
 
