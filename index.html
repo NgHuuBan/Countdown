@@ -2,54 +2,66 @@
 <html lang="vi">
 <head>
   <meta charset="UTF-8" />
-  <title>Đồng hồ đếm ngược</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Countdown Minecraft Server</title>
   <style>
     body {
-      background-color: #000;
+      font-family: sans-serif;
+      background: #111;
       color: #0f0;
-      font-family: monospace;
-      text-align: center;
-      font-size: 48px;
-      margin-top: 20%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      height: 100vh;
+      margin: 0;
+      flex-direction: column;
     }
-    .expired {
-      color: red;
+    h1 {
+      font-size: 3rem;
     }
   </style>
 </head>
 <body>
-  <div id="countdown">Đang đợi thời gian bắt đầu...</div>
+  <h1 id="countdown">Đang tải...</h1>
 
   <script>
-    const params = new URLSearchParams(window.location.search);
-    const start = parseInt(params.get("start"));
-    const duration = 3 * 3600 + 45 * 60;
+    async function loadCountdown() {
+      const url = "https://raw.githubusercontent.com/NgHuuBan/Countdown/main/start.json";
+      const TIMEOUT = 13500; // 3h45p = 13500 giây
 
-    if (isNaN(start)) {
-      document.getElementById("countdown").textContent = "Thiếu thông số ?start=...";
-    } else {
-      const end = start + duration;
+      try {
+        const response = await fetch(url);
+        const data = await response.json();
+        const start = data.start;
+        const endTime = start + TIMEOUT;
 
-      function updateCountdown() {
-        const now = Math.floor(Date.now() / 1000);
-        const remaining = end - now;
-        const countdown = document.getElementById("countdown");
+        function updateCountdown() {
+          const now = Math.floor(Date.now() / 1000);
+          let remaining = endTime - now;
 
-        if (remaining <= 0) {
-          countdown.textContent = "Đã đến giờ dừng server.";
-          countdown.classList.add("expired");
-          return;
+          if (remaining <= 0) {
+            document.getElementById("countdown").textContent = "⏰ Đã hết giờ!";
+            return;
+          }
+
+          const hours = Math.floor(remaining / 3600);
+          const minutes = Math.floor((remaining % 3600) / 60);
+          const seconds = remaining % 60;
+
+          document.getElementById("countdown").textContent =
+            `⏳ Còn lại: ${hours.toString().padStart(2, "0")}:${minutes
+              .toString()
+              .padStart(2, "0")}:${seconds.toString().padStart(2, "0")}`;
         }
 
-        const h = String(Math.floor(remaining / 3600)).padStart(2, '0');
-        const m = String(Math.floor((remaining % 3600) / 60)).padStart(2, '0');
-        countdown.textContent = `Còn lại: ${h}:${m}`;
-
-        setTimeout(updateCountdown, 1000);
+        updateCountdown();
+        setInterval(updateCountdown, 1000);
+      } catch (e) {
+        document.getElementById("countdown").textContent = "⚠ Không lấy được thời gian.";
       }
-
-      updateCountdown();
     }
+
+    window.onload = loadCountdown;
   </script>
 </body>
 </html>
