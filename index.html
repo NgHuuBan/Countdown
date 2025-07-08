@@ -36,7 +36,7 @@
     const stopUrl = "https://raw.githubusercontent.com/NgHuuBan/Countdown/main/stop.json";
 
     async function fetchJson(url) {
-      const res = await fetch(url);
+      const res = await fetch(url + "?t=" + Date.now()); // tránh cache
       if (!res.ok) throw new Error("Không tìm thấy " + url);
       return res.json();
     }
